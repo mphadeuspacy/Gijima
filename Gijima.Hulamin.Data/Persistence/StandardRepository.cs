@@ -6,6 +6,7 @@ using Gijima.Hulamin.Core.Validation.Abstracts;
 using System.Data;
 using System.Data.SqlClient;
 using Gijima.Hulamin.Core.Exceptions;
+using Microsoft.ApplicationBlocks.Data;
 
 namespace Gijima.Hulamin.Data.Persistence
 {
@@ -24,28 +25,24 @@ namespace Gijima.Hulamin.Data.Persistence
         {
             ValidateEntity(entity);
 
-            var sqlConnection = new SqlConnection(_connectionString);
-
             try
-            {                
-                sqlConnection.Open();
-
-                var command = sqlConnection.CreateCommand();
-                command.CommandType = CommandType.StoredProcedure;
-                command.CommandText = "CreateEntity";
-                
-                command.Parameters.Add(new SqlParameter(nameof(entity.Name), entity.Name));
-
-                command.BeginExecuteNonQuery();                
+            {
+                if(entity is Product productEntity )
+                   SqlHelper.ExecuteNonQuery(_connectionString, CommandType.StoredProcedure, "CreateEntityProduct",
+                                         new SqlParameter("@Name", productEntity.Name),
+                                         new SqlParameter("@SupplierId", productEntity.SupplierId),
+                                         new SqlParameter("@CategoryId", productEntity.CategoryId),
+                                         new SqlParameter("@QuantityPerUnit", productEntity.QuantityPerUnit),
+                                         new SqlParameter("@UnitPrice", productEntity.UnitPrice),
+                                         new SqlParameter("@UnitsInStock", productEntity.UnitsInStock),
+                                         new SqlParameter("@UnitsOnOrder", productEntity.UnitsOnOrder),
+                                         new SqlParameter("@ReorderLevel", productEntity.ReorderLevel),
+                                         new SqlParameter("@Discontinued", productEntity.Discontinued));
             }
             catch (Exception sqlException)
             {
                 throw new BusinessException(sqlException.Message);
-            }
-            finally
-            {
-                sqlConnection.Close();
-            }
+            }           
         }
 
         public async Task<List<IEntity>> GetAllAsync()
